@@ -1,5 +1,7 @@
 # Reinforcement Learning Through Human Feedbacks (RLHF)
 
+RLHF pipeline:
+
 * STEP1: Ziegler2020
 * STEP2: HF tlr
 * STEP3: tlrx

@@ -667,5 +667,83 @@ optimizer.step()
 
 These examples form a clean playground for building, testing, and comparing RLHF-style fine-tuning strategies in PyTorch. You can plug in real reward models, critics, or human preference data later.
 
-Let me know if you'd like a batched version, visualization, or `torch.compile`-ready code.
+
+# 🧠 RLHF Method Extensions: PPO, DPO, SPO, GRPO
+
+This README expands your baby PPO implementation into modern preference-based fine-tuning methods used in RLHF research:
+
+* **PPO**: Policy optimization with sampled rewards and logprob ratios
+* **DPO**: Direct preference optimization using preferred vs rejected responses
+* **SPO**: Score-based preference optimization with real-valued feedback
+* **GRPO**: Generalized Reweighted PPO using preference-weighted logprob ratios
+
+Each method keeps the same tiny GPT-style policy and PyTorch training loop style.
+
+---
+
+## 🔍 Method Comparison Table
+
+| Method   | Uses Rewards? | Uses Preferences? | Requires Value Function? | Loss Based On              |
+| -------- | ------------- | ----------------- | ------------------------ | -------------------------- |
+| **PPO**  | ✅ Yes         | ❌ No              | ✅ Yes                    | Logprob ratio × reward     |
+| **DPO**  | ❌ No          | ✅ Yes             | ❌ No                     | Logsigmoid(logπ_diff)      |
+| **SPO**  | ✅ (score)     | ✅ Yes (scored)    | ❌ No                     | Score × logprob difference |
+| **GRPO** | ❌ No          | ✅ Yes (binary)    | ❌ No                     | Reweighted logprob ratio   |
+
+---
+
+## 🌱 Tiny Illustrative Examples (Runnable 5-Line Demos)
+
+Below are self-contained, minimal runnable versions for each method:
+
+```python
+import torch
+import torch.nn.functional as F
+
+# Dummy logprobs for two responses A and B
+logprob_a = torch.tensor(-1.0, requires_grad=True)  # e.g., log π(a)
+logprob_b = torch.tensor(-1.4, requires_grad=True)  # e.g., log π(b)
+```
+
+### 🧪 PPO
+
+```python
+reward = torch.tensor(1.0)
+logprob_old = logprob_a.detach()
+ratio = torch.exp(logprob_a - logprob_old)
+loss = -ratio * reward
+loss.backward()
+print("PPO Loss:", loss.item())
+```
+
+### ⚖️ DPO
+
+```python
+loss = -F.logsigmoid(logprob_a - logprob_b)
+loss.backward()
+print("DPO Loss:", loss.item())
+```
+
+### 📈 SPO
+
+```python
+score_a = torch.tensor(0.9)
+score_b = torch.tensor(0.6)
+loss = -(score_a - score_b) * (logprob_a - logprob_b)
+loss.backward()
+print("SPO Loss:", loss.item())
+```
+
+### 🔄 GRPO
+
+```python
+preference = torch.tensor(1.0)  # prefers A
+logprob_old = logprob_a.detach()
+ratio = torch.exp(logprob_a - logprob_old)
+loss = -torch.log(preference * ratio + (1 - preference))
+loss.backward()
+print("GRPO Loss:", loss.item())
+```
+
+> 💡 These are minimal, differentiable PyTorch examples you can copy-paste and run.
 

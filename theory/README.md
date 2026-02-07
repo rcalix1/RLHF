@@ -215,5 +215,36 @@ logprobs = torch.log(probs)
 
 
 
+### 🧠 PPO: Why Use `probs`, `logprobs`, and Ratios?
+
+In PPO (used in RLHF), we train a policy by generating actions (e.g., tokens), scoring them, and updating the model carefully.
+
+To control how much the model changes, PPO compares the new and old policy’s confidence using a ratio:
+
+**ratio = π_new(action) / π_old(action)**
+
+To make this stable, we compute it in log-space:
+
+* `logprobs = log(π(action))`
+* `log_ratio = logπ_new - logπ_old`
+* `ratio = exp(log_ratio)`
+
+This tells us:
+
+* `ratio > 1.0`: model is more confident now
+* `ratio < 1.0`: model is less confident
+
+Then PPO uses this in the loss:
+
+**loss = - ratio * reward + KL_penalty**
+
+This encourages:
+
+* Higher reward sequences to be more likely
+* But keeps the policy close to the old one (trust region)
+
+✅ Use `probs` to sample actions
+✅ Use `logprobs` to track confidence
+✅ Use `logπ_new - logπ_old` to compute the ratio for PPO updates
 
 

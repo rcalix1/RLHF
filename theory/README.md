@@ -248,3 +248,64 @@ This encourages:
 ✅ Use `logπ_new - logπ_old` to compute the ratio for PPO updates
 
 
+
+
+### 🔢 What’s the "ratio" in PPO?
+
+You're thinking:
+
+> "Ratio = a / b" → ✅ that's exactly what it is.
+
+In PPO, the ratio is:
+
+```
+π_new(action) / π_old(action)
+```
+
+But since we work with **logprobs**, we use:
+
+```
+log(π_new(action)) - log(π_old(action)) = log(π_new / π_old)
+```
+
+Then we take:
+
+```
+ratio = exp(logπ_new - logπ_old)
+```
+
+So it **is** a ratio — just expressed in log-space first for stability, and then exponentiated to get back to ratio form.
+
+### 🔁 Why use the ratio?
+
+Because PPO wants to know:
+
+> "How much more (or less) confident is the *new* policy about the action compared to the *old* one?"
+
+* If `ratio > 1` → model now **likes the action more**
+* If `ratio < 1` → model now **likes it less**
+
+Multiply this by the reward to decide: should this change be encouraged?
+
+### 🎯 PPO Loss Goal:
+
+```python
+loss = - ratio * reward  +  KL penalty  # or clipping
+```
+
+So the model is:
+
+* ✅ Encouraged to increase π_new(action) if reward is high
+* ❌ Penalized if it changes too much
+
+### 🧠 TL;DR
+
+| Term                  | Meaning                                     |
+| --------------------- | ------------------------------------------- |
+| `probs`               | π(action) — likelihood of chosen token      |
+| `logprobs`            | log(π(action)) — used for stability         |
+| `logπ_new - logπ_old` | Log of the ratio = log(π_new / π_old)       |
+| `ratio`               | π_new / π_old — how much the policy changed |
+
+✅ So yes — it's still a ratio.
+You're just seeing it go through a `log → subtraction → exp` flow to keep the math clean and stable.

@@ -86,3 +86,113 @@ for step in range(300):
 
 
 ```
+
+## Other
+
+
+
+
+```
+
+
+
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import torch.nn.functional as F
+
+# === Tiny GPT-style Policy ===
+class TinyPolicy(nn.Module):
+    def __init__(self, vocab_size=10, hidden_dim=16):
+        super().__init__()
+        self.embed = nn.Embedding(vocab_size, hidden_dim)
+        self.lm_head = nn.Linear(hidden_dim, vocab_size)  # Predict next-token logits
+
+    def forward(self, input_ids):
+        x = self.embed(input_ids)          # [seq_len, hidden]
+        last_hidden = x[-1]                # Use last token's embedding
+        logits = self.lm_head(last_hidden) # [vocab_size]
+        return logits  # logits over vocab for next token
+
+
+# === Reward function: +1 if token == 1 ===
+def fake_reward(token_ids):
+    return torch.where(token_ids == 1, torch.tensor(1.0), torch.tensor(0.0))
+
+# === PPO Loss Function ===
+def ppo_loss(new_logprobs, old_logprobs, rewards, kl_coeff=0.1):
+    ratio = torch.exp(new_logprobs - old_logprobs)
+    surrogate = ratio * rewards
+    kl = (old_logprobs - new_logprobs).mean()
+    return -surrogate.mean() + kl_coeff * kl
+
+
+# === Training Loop ===
+vocab_size = 10
+policy = TinyPolicy(vocab_size)
+optimizer = optim.Adam(policy.parameters(), lr=1e-2)
+
+for step in range(300):
+    prompt = torch.tensor([0])  # Start with a fixed token (e.g., BOS token 0)
+    generated = [0]
+
+    old_logprobs = []
+    rewards = []
+
+    for _ in range(8):  # Generate 8 tokens step-by-step
+        logits = policy(prompt)
+        probs = F.softmax(logits, dim=-1)
+        next_token = torch.multinomial(probs, num_samples=1)  # Sample next token
+        logprob = torch.log(probs[next_token])
+
+        # Save data
+        old_logprobs.append(logprob)
+        rewards.append(fake_reward(next_token))
+        generated.append(next_token.item())
+
+        # Update prompt
+        prompt = torch.cat([prompt, next_token], dim=0)
+
+    generated_tensor = torch.tensor(generated[1:])  # drop BOS token
+    rewards = torch.stack(rewards).squeeze()
+    old_logprobs = torch.stack(old_logprobs).squeeze()
+
+    # === Compute new logprobs under current policy ===
+    new_logprobs = []
+    prompt = torch.tensor([0])
+    for token in generated_tensor:
+        logits = policy(prompt)
+        probs = F.softmax(logits, dim=-1)
+        logprob = torch.log(probs[token])
+        new_logprobs.append(logprob)
+        prompt = torch.cat([prompt, token.unsqueeze(0)], dim=0)
+
+    new_logprobs = torch.stack(new_logprobs)
+
+    # === Compute PPO loss ===
+    loss = ppo_loss(new_logprobs, old_logprobs, rewards)
+
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+    if step % 50 == 0:
+        avg_reward = rewards.float().mean().item()
+        print(f"Step {step} | Loss: {loss.item():.4f} | Avg Reward: {avg_reward:.2f}")
+
+
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+

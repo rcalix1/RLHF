@@ -474,3 +474,198 @@ loss.backward()
 optimizer.step()
 ```
 
+
+# 🧠 RLHF Method Extensions: PPO, DPO, SPO, GRPO
+
+This README expands your baby PPO implementation into modern preference-based fine-tuning methods used in RLHF research:
+
+* **PPO**: Policy optimization with sampled rewards and logprob ratios
+* **DPO**: Direct preference optimization using preferred vs rejected responses
+* **SPO**: Score-based preference optimization with real-valued feedback
+* **GRPO**: Generalized Reweighted PPO using preference-weighted logprob ratios
+
+Each method keeps the same tiny GPT-style policy and PyTorch training loop style.
+
+---
+
+## ✅ PPO Baseline (with Tiny GPT-Style Policy)
+
+This is the basic setup where we:
+
+* Generate an 8-token sequence from a simple policy
+* Compute token-level rewards
+* Use the PPO loss to scale updates based on log-ratio of new vs old policy
+
+```python
+import torch
+import torch.nn as nn
+import torch.optim as optim
+import torch.nn.functional as F
+
+# === Tiny GPT-style Policy ===
+class TinyPolicy(nn.Module):
+    def __init__(self, vocab_size=10, hidden_dim=16):
+        super().__init__()
+        self.embed = nn.Embedding(vocab_size, hidden_dim)
+        self.lm_head = nn.Linear(hidden_dim, vocab_size)  # Predict next-token logits
+
+    def forward(self, input_ids):
+        x = self.embed(input_ids)          # [seq_len, hidden]
+        last_hidden = x[-1]                # Use last token's embedding
+        logits = self.lm_head(last_hidden) # [vocab_size]
+        return logits  # logits over vocab for next token
+
+# === Reward function: +1 if token == 1 ===
+def fake_reward(token_ids):
+    return torch.where(token_ids == 1, torch.tensor(1.0), torch.tensor(0.0))
+
+# === PPO Loss Function ===
+def ppo_loss(new_logprobs, old_logprobs, rewards, kl_coeff=0.1):
+    ratio = torch.exp(new_logprobs - old_logprobs)
+    surrogate = ratio * rewards
+    kl = (old_logprobs - new_logprobs).mean()
+    return -surrogate.mean() + kl_coeff * kl
+
+# === Training Loop ===
+vocab_size = 10
+policy = TinyPolicy(vocab_size)
+optimizer = optim.Adam(policy.parameters(), lr=1e-2)
+
+for step in range(300):
+    prompt = torch.tensor([0])
+    generated = [0]
+    old_logprobs = []
+    rewards = []
+
+    for _ in range(8):
+        logits = policy(prompt)
+        probs = F.softmax(logits, dim=-1)
+        next_token = torch.multinomial(probs, num_samples=1)
+        logprob = torch.log(probs[next_token])
+
+        old_logprobs.append(logprob)
+        rewards.append(fake_reward(next_token))
+        generated.append(next_token.item())
+        prompt = torch.cat([prompt, next_token], dim=0)
+
+    generated_tensor = torch.tensor(generated[1:])
+    rewards = torch.stack(rewards).squeeze()
+    old_logprobs = torch.stack(old_logprobs).squeeze()
+
+    new_logprobs = []
+    prompt = torch.tensor([0])
+    for token in generated_tensor:
+        logits = policy(prompt)
+        probs = F.softmax(logits, dim=-1)
+        logprob = torch.log(probs[token])
+        new_logprobs.append(logprob)
+        prompt = torch.cat([prompt, token.unsqueeze(0)], dim=0)
+
+    new_logprobs = torch.stack(new_logprobs)
+    loss = ppo_loss(new_logprobs, old_logprobs, rewards)
+
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+
+    if step % 50 == 0:
+        avg_reward = rewards.float().mean().item()
+        print(f"Step {step} | Loss: {loss.item():.4f} | Avg Reward: {avg_reward:.2f}")
+```
+
+> 🔁 PPO uses a reward-weighted ratio: `ratio = exp(logπ_new - logπ_old)`
+> It encourages higher rewards but penalizes large policy shifts (via KL or clipping).
+
+---
+
+## ⚖️ DPO (Direct Preference Optimization)
+
+DPO compares two responses and teaches the model to prefer the better one by increasing its logprob.
+
+```python
+# === DPO Loss ===
+def dpo_loss(logprob_chosen, logprob_rejected):
+    return -F.logsigmoid(logprob_chosen - logprob_rejected)
+
+# === Paired Training Example ===
+prompt = torch.tensor([0])
+response_a = torch.tensor([2, 1, 3])
+response_b = torch.tensor([2, 4, 3])
+preferred = response_a
+rejected = response_b
+
+def compute_logprob(policy, prompt, response):
+    input_seq = prompt.clone()
+    logprobs = []
+    for token in response:
+        logits = policy(input_seq)
+        probs = F.softmax(logits, dim=-1)
+        logprobs.append(torch.log(probs[token]))
+        input_seq = torch.cat([input_seq, token.unsqueeze(0)], dim=0)
+    return torch.stack(logprobs).sum()
+
+logprob_chosen = compute_logprob(policy, prompt, preferred)
+logprob_rejected = compute_logprob(policy, prompt, rejected)
+loss = dpo_loss(logprob_chosen, logprob_rejected)
+loss.backward()
+optimizer.step()
+```
+
+> ἟e἟9 DPO uses **pairwise comparisons** with no critic.
+> It teaches the model to score preferred sequences higher.
+
+---
+
+## 📈 SPO (Score-based Preference Optimization)
+
+SPO generalizes DPO by using real-valued scores instead of binary preferences.
+
+```python
+# === SPO Loss ===
+def spo_loss(logprob_a, logprob_b, score_a, score_b):
+    score_diff = score_a - score_b
+    logprob_diff = logprob_a - logprob_b
+    return -score_diff * logprob_diff
+
+# === Paired Training with Scores ===
+score_a = torch.tensor(1.0)
+score_b = torch.tensor(0.0)
+logprob_a = compute_logprob(policy, prompt, response_a)
+logprob_b = compute_logprob(policy, prompt, response_b)
+loss = spo_loss(logprob_a, logprob_b, score_a, score_b)
+loss.backward()
+optimizer.step()
+```
+
+> 🧹 SPO uses **continuous reward scores** to shape policy gradients directly.
+
+---
+
+## 🔄 GRPO (Generalized Reweighted PPO)
+
+GRPO keeps the PPO-style ratio but replaces rewards with preference indicators.
+
+```python
+# === GRPO Loss ===
+def grpo_loss(new_logprob, old_logprob, preference, beta=1.0):
+    ratio = torch.exp(new_logprob - old_logprob)
+    weight = preference * ratio + (1 - preference)
+    return -torch.log(weight)
+
+# === Paired Training with Preference ===
+preference = torch.tensor(1.0)
+old_logprob = logprob_chosen.detach()
+new_logprob = logprob_chosen
+loss = grpo_loss(new_logprob, old_logprob, preference)
+loss.backward()
+optimizer.step()
+```
+
+> ⚖️ GRPO bridges PPO and DPO: it reweights PPO by preference without needing a critic.
+
+---
+
+These examples form a clean playground for building, testing, and comparing RLHF-style fine-tuning strategies in PyTorch. You can plug in real reward models, critics, or human preference data later.
+
+Let me know if you'd like a batched version, visualization, or `torch.compile`-ready code.
+

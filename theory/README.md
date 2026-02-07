@@ -193,6 +193,25 @@ for step in range(300):
 
 
 
+### 🔢 `probs` vs `logprobs`
+
+| Term       | Meaning                           | Example           |
+|------------|------------------------------------|-------------------|
+| `probs`    | Regular probabilities (0 to 1)     | `0.2`, `0.7`, `0.05` |
+| `logprobs` | Logarithm of those probabilities   | `log(0.2) ≈ -1.61`   |
+
+### 🧠 Why use `logprobs`?
+
+- Avoids tiny numbers (numerically stable)
+- Makes math additive: `log(p1 * p2) = log(p1) + log(p2)`
+- PPO uses `logprobs` to compute: `log(π_new) - log(π_old)`  
+  → this log-ratio controls the policy update size
+
+### 🧪 Tiny PyTorch Example
+
+```python
+probs = torch.tensor([0.2, 0.7, 0.1])
+logprobs = torch.log(probs)
 
 
 

@@ -142,6 +142,8 @@ for step in range(300):
     for _ in range(8):  # Generate 8 tokens step-by-step
         logits = policy(prompt)
         probs = F.softmax(logits, dim=-1)
+        # torch.multinomial adds controlled randomness — usually picks high-prob tokens like index 8  
+        # but sometimes explores others — perfect for RLHF-style exploration vs argmax
         next_token = torch.multinomial(probs, num_samples=1)  # Sample next token
         logprob = torch.log(probs[next_token])
 

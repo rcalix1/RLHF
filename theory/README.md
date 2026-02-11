@@ -217,7 +217,9 @@ logprobs = torch.log(probs)
 
 ### 🧠 PPO: Why Use `probs`, `logprobs`, and Ratios?
 
-In PPO (used in RLHF), we train a policy by generating actions (e.g., tokens), scoring them, and updating the model carefully.
+In PPO (used in RLHF), we train a policy by generating actions (e.g., tokens), scoring them,
+
+and updating the model carefully.
 
 To control how much the model changes, PPO compares the new and old policy’s confidence using a ratio:
 
@@ -274,7 +276,8 @@ Then we take:
 ratio = exp(logπ_new - logπ_old)
 ```
 
-So it **is** a ratio — just expressed in log-space first for stability, and then exponentiated to get back to ratio form.
+So it **is** a ratio — just expressed in log-space first for stability, and
+then exponentiated to get back to ratio form.
 
 ### 🔁 Why use the ratio?
 
@@ -308,7 +311,9 @@ So the model is:
 | `ratio`               | π_new / π_old — how much the policy changed |
 
 ✅ So yes — it's still a ratio.
-You're just seeing it go through a `log → subtraction → exp` flow to keep the math clean and stable.
+You're just seeing it go through a `log → subtraction → exp` flow to keep 
+
+the math clean and stable.
 
 
 

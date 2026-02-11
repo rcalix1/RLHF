@@ -714,7 +714,7 @@ loss.backward()
 optimizer.step()
 ```
 
-> ἟e἟9 DPO uses **pairwise comparisons** with no critic.
+> DPO uses **pairwise comparisons** with no critic.
 > It teaches the model to score preferred sequences higher.
 
 ---

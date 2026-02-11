@@ -773,7 +773,7 @@ These examples form a clean playground for building, testing, and comparing RLHF
 
 # 🧠 RLHF Method Extensions: PPO, DPO, SPO, GRPO
 
-This README expands your baby PPO implementation into modern preference-based fine-tuning methods used in RLHF research:
+This README expands the baby PPO implementation into modern preference-based fine-tuning methods used in RLHF research:
 
 * **PPO**: Policy optimization with sampled rewards and logprob ratios
 * **DPO**: Direct preference optimization using preferred vs rejected responses

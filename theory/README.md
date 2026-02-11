@@ -87,6 +87,103 @@ for step in range(300):
 
 ```
 
+---
+
+
+# Logarithmic Representation of a Ratio
+
+## Key Formula
+
+The logarithm of a ratio is the **difference** of the logarithms:
+
+$$
+\log_b\left(\frac{a}{c}\right) = \log_b(a) - \log_b(c)
+$$
+
+This identity holds for **any base** ( b ) (e.g., natural log, base-10 log, base-2 log).
+
+---
+
+## Why This Is Useful
+
+1. **Simplifies Division:**
+
+   * Instead of dividing values directly, you can subtract their logs.
+
+2. **Used in Log-Transforms:**
+
+   * Often applied in data science and machine learning to normalize ratios.
+
+3. **Applies to Probabilities:**
+
+   * Log-likelihoods and Bayes' Theorem often use log-ratios.
+
+---
+
+## Example (Manual Calculation)
+
+Let ( a = 100 ) and ( c = 10 ), base-10 log:
+
+$$
+\log_{10}\left(\frac{100}{10}\right) = \log_{10}(100) - \log_{10}(10) = 2 - 1 = 1
+$$
+
+Indeed:
+
+$$
+\frac{100}{10} = 10 \quad \Rightarrow \quad \log_{10}(10) = 1
+$$
+
+---
+
+## Example (NumPy Code)
+
+```python
+import numpy as np
+
+# Inputs
+a = np.array([100])
+c = np.array([10])
+
+# Log base 10
+log_ratio = np.log10(a) - np.log10(c)
+print("log10(a/c) =", log_ratio[0])  # Output: 1.0
+
+# Or directly:
+log_direct = np.log10(a / c)
+print("Direct log10(a/c) =", log_direct[0])  # Output: 1.0
+```
+
+For natural log:
+
+```python
+# Natural log (base e)
+log_ratio_ln = np.log(a) - np.log(c)
+print("ln(a/c) =", log_ratio_ln[0])
+```
+
+---
+
+## Summary Table
+
+| Operation       | Log Equivalent        |
+| --------------- | --------------------- |
+| ( a \cdot c )   | ( \log(a) + \log(c) ) |
+| ( \frac{a}{c} ) | ( \log(a) - \log(c) ) |
+| ( a^c )         | ( c \cdot \log(a) )   |
+
+---
+
+Use these rules when simplifying log expressions, implementing log-space math, or working with numerical stability in algorithms.
+
+
+
+---
+
+
+
+
+
 ## Other
 
 

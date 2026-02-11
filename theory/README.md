@@ -166,11 +166,12 @@ print("ln(a/c) =", log_ratio_ln[0])
 
 ## Summary Table
 
-| Operation       | Log Equivalent        |
-| --------------- | --------------------- |
-| ( a \cdot c )   | ( \log(a) + \log(c) ) |
-| ( \frac{a}{c} ) | ( \log(a) - \log(c) ) |
-| ( a^c )         | ( c \cdot \log(a) )   |
+| Operation        | Log Equivalent              |
+|------------------|------------------------------|
+| $a \\cdot c$      | $\\log(a) + \\log(c)$         |
+| $\\frac{a}{c}$    | $\\log(a) - \\log(c)$         |
+| $a^c$             | $c \\cdot \\log(a)$           |
+
 
 ---
 

@@ -540,7 +540,7 @@ A learned value head is simply a *smarter*, context-dependent baseline.
 To maintain alignment with the pretrained base model:
 
 $$
-\mathrm{KL}(\pi_{\text{new}} ,|, \pi_{\text{orig}})
+\mathrm{KL}(\pi_{\text{new}} | \pi_{\text{orig}})
 $$
 
 This prevents reward hacking, distribution collapse, and unsafe deviations.

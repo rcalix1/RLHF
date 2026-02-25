@@ -422,7 +422,6 @@ the math clean and stable.
 
 # PPO–RLHF: Full Mathematical Objective + Deep Insights
 
-This document combines the **full mathematical formulation** of PPO–RLHF with **conceptual insights** on reward maximization, the role of the ratio, and the meaning of the advantage baseline.
 
 ---
 
@@ -431,7 +430,7 @@ This document combines the **full mathematical formulation** of PPO–RLHF with 
 The simplified policy optimization objective used in RLHF is:
 
 $$
-\mathcal{L} = r_t \cdot A_t , - , \beta , \mathrm{KL}(\pi_{\text{new}} ,|, \pi_{\text{orig}})
+\mathcal{L} = r_t \cdot A_t  -  \beta  \mathrm{KL}(\pi_{\text{new}} | \pi_{\text{orig}})
 $$
 
 Where:

@@ -567,14 +567,17 @@ $$
 
 ---
 
-## GPT Scoring a Sequence (NOT Teacher Forcing)
+## GPT Scoring a Sequence (Intuition of the log probs)
 
 When GPT is given a complete text sequence as input, it always returns next-token logits for every position in that sequence.
+
+We can give the same text to both the old GPT policy and new GPT policy that make up the ratio. Like follows and they can help provide the probs. 
+
 Example input sequence:
 
 the fast car is faster than light
 
-GPT returns log-probabilities (or logits) for each token in the sequence:
+GPT (old and new) returns log-probabilities (or logits) for each token in the sequence:
 
 "fast"
 
@@ -588,7 +591,7 @@ GPT returns log-probabilities (or logits) for each token in the sequence:
 
 "light"
 
-(and the next token after "light")
+(and the next token after "light") and we can ignore this one
 
 This process is simply:
 

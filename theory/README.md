@@ -567,7 +567,34 @@ $$
 
 ---
 
+## GPT Scoring a Sequence (NOT Teacher Forcing)
 
+When GPT is given a complete text sequence as input, it always returns next-token logits for every position in that sequence.
+Example input sequence:
+
+the fast car is faster than light
+
+GPT returns log-probabilities (or logits) for each token in the sequence:
+
+"fast"
+
+"car"
+
+"is"
+
+"faster"
+
+"than"
+
+"light"
+
+(and the next token after "light")
+
+This process is simply:
+
+Log-probability evaluation of a provided sequence.
+
+---
 
 ## more
 

@@ -609,7 +609,6 @@ $$
 <img src="logProbsForRatio.png" width="50%" alt="drawing"/>
 
 
-![logsRatio](logProbsForRatio.png)
 
 ---
 

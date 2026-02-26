@@ -606,6 +606,8 @@ $$
 r_t = \frac{\pi_{\text{new}}(y_t \mid x)}{\pi_{\text{old}}(y_t \mid x)}
 $$
 
+<img src="logProbsForRatio.png" width="50%" alt="drawing"/>
+
 
 ![logsRatio](logProbsForRatio.png)
 

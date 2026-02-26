@@ -597,6 +597,18 @@ This process is simply:
 
 Log-probability evaluation of a provided sequence.
 
+## Log Probs for Ratio 
+
+* question and answer can be given to old and new GPT for scoring
+
+
+$$
+r_t = \frac{\pi_{\text{new}}(y_t \mid x)}{\pi_{\text{old}}(y_t \mid x)}
+$$
+
+
+![logsRatio](logProbsForRatio.png)
+
 ---
 
 ## more
